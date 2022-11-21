@@ -5,13 +5,13 @@ This is an un-official Valist Software License Client SDK. It allows you to inte
 #### Installation
 
 ```bash
-npm install valist-software-license-client
+npm install valist-license-sdk-ts
 ```
 
 #### Usage
 
 ```typescript
-import ValistLicenseClient from 'valist-software-license-client';
+import ValistLicenseClient from 'valist-license-sdk-ts';
 
 const provider  = new ethers.providers.JsonRpcProvider('http://localhost:8545');
 // or window ethereum provider
@@ -38,7 +38,7 @@ console.log(isExists); // true or false
   
   ```typescript
   const projectId = 21;
-  const receipt = "0x...";
+  const recipient = "0x..."; // recipient address to receive the license NFT
 
   const purchaseLicenseTx = await valistLicenseClient.purchaseLicense(projectId, recipient);
   console.log(purchaseLicenseTx); // ethers.js transaction object

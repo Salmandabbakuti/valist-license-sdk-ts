@@ -34,12 +34,12 @@ class LicenseClient {
  */
   constructor(provider: Provider, chainId: number) {
     // check if entered chainId is supported
-    if (!provider || !chainId) throw new Error("SDK: Provider and chainId are required!");
-    if (!chainIds.includes(chainId)) throw new Error("SDK: ChainId is not supported. Supported chainIds are 137, 8001");
+    if (!provider || !chainId) throw new Error("Valist License SDK: Provider and chainId are required!");
+    if (!chainIds.includes(chainId)) throw new Error("Valist License SDK: ChainId is not supported. Supported chainIds are 137, 8001");
     provider.getNetwork().then((network) => {
-      if (chainId !== network.chainId) throw new Error("SDK: Provider chainId does not match with the chainId passed!");
+      if (chainId !== network.chainId) throw new Error("Valist License SDK: Provider chainId does not match with the chainId passed!");
     });
-    console.log("SDK: initialized with chainId", chainId);
+    console.log("Valist License SDK: initialized with chainId", chainId);
     const licenseContractAddress = contractAddresses[chainId];
     console.log(provider);
     this.provider = provider;
@@ -64,7 +64,7 @@ class LicenseClient {
     const digest = utils.arrayify(messgeHash);
     // const recoveredAddress = utils.verifyMessage(signingMessage, signature);
     const recoveredAddress = utils.recoverAddress(digest, signature);
-    if (signerAddress.toLowerCase() !== recoveredAddress.toLowerCase()) throw new Error("Invalid signature");
+    if (signerAddress.toLowerCase() !== recoveredAddress.toLowerCase()) throw new Error("Valist License SDK: Invalid signature");
     const balance = await this.licenseClient.balanceOf(signerAddress, projectId);
     return balance > 0;
   }
@@ -95,7 +95,7 @@ class LicenseClient {
     const price = await this.licenseClient["getPrice(address,uint256)"](tokenAddress, projectId);
     const tokenContract = new Contract(tokenAddress, erc20Abi, this.signer);
     const tokenBalance = await tokenContract.balanceOf(this.signer.getAddress());
-    if (tokenBalance < price) throw new Error("Insufficient token balance");
+    if (tokenBalance < price) throw new Error("Valist License SDK: Insufficient token balance");
     const approveTx = await tokenContract.approve(this.licenseClient.address, price);
     await approveTx.wait();
     const tranaction = await this.licenseClient["purchase(address,uint256,address)"](tokenAddress, projectId, recipient, { value: price });

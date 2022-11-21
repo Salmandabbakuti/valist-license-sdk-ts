@@ -1,11 +1,18 @@
 {
   "name": "valist-license-sdk-ts",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "TypeScript SDK for Software License NFTs",
   "author": "Salman Dabbakuti",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Salmandabbakuti/valist-license-sdk-ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Salmandabbakuti/valist-license-sdk-ts/issues"
+  },
   "files": [
     "dist",
     "src"
