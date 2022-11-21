@@ -1,0 +1,32 @@
+{
+  "name": "valist-licence-sdk-ts",
+  "version": "1.0.0",
+  "description": "Valist Licence SDK for Typescript",
+  "author": "Salman Dabbakuti",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=12"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "devDependencies": {
+    "tslib": "^2.4.1",
+    "typescript": "^4.9.3"
+  },
+  "dependencies": {
+    "ethers": "^5.7.2"
+  }
+}
