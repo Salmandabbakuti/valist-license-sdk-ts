@@ -1,8 +1,14 @@
-import { Contract, utils, providers, ethers } from 'ethers';
+import { Web3Provider, JsonRpcSigner, JsonRpcProvider } from '@ethersproject/providers';
+import { arrayify } from '@ethersproject/bytes';
+import { hashMessage } from '@ethersproject/hash';
+import { recoverAddress } from '@ethersproject/transactions';
+import { Contract, ContractTransaction, ContractInterface } from "@ethersproject/contracts";
+import { BigNumberish } from "@ethersproject/bignumber";
 
-type Provider = providers.Web3Provider | providers.JsonRpcProvider;
 
-const licenseContractAbi: ethers.ContractInterface = [
+type Provider = Web3Provider | JsonRpcProvider;
+
+const licenseContractABI: ContractInterface = [
   "function balanceOf(address account, uint256 id) view returns (uint256)",
   "function getPrice(address _token, uint256 _projectID) view returns (uint256)",
   "function getPrice(uint256 _projectID) view returns (uint256)",
@@ -10,12 +16,12 @@ const licenseContractAbi: ethers.ContractInterface = [
   "function purchase(address _token, uint256 _projectID, address _recipient)"
 ];
 
-const erc20Abi: ethers.ContractInterface = [
+const erc20ABI: ContractInterface = [
   "function balanceOf(address account) view returns (uint256)",
   "function approve(address spender, uint256 amount) returns (bool)"
 ];
 
-const chainIds = [8001, 137];
+const supportedChainIds: number[] = [8001, 137];
 
 const contractAddresses: { [key: number]: string; } = {
   8001: "0x3cE643dc61bb40bB0557316539f4A93016051b81",
@@ -23,19 +29,19 @@ const contractAddresses: { [key: number]: string; } = {
 };
 
 class LicenseClient {
-  signer: providers.JsonRpcSigner;
+  signer: JsonRpcSigner;
   provider: Provider;
   licenseClient: Contract;
 
   /**
  * @constructor
- * @param {Provider} provider - instance of ethers.providers.Web3Provider or ethers.providers.JsonRpcProvider
+ * @param {Provider} provider - instance of Web3Provider or JsonRpcProvider
  * @param {number} chainId - chainId of the network to be used
  */
   constructor(provider: Provider, chainId: number) {
     // check if entered chainId is supported
     if (!provider || !chainId) throw new Error("Valist License SDK: Provider and chainId are required!");
-    if (!chainIds.includes(chainId)) throw new Error("Valist License SDK: ChainId is not supported. Supported chainIds are 137, 8001");
+    if (!supportedChainIds.includes(chainId)) throw new Error("Valist License SDK: ChainId is not supported. Supported chainIds are 137, 8001");
     provider.getNetwork().then((network) => {
       if (chainId !== network.chainId) throw new Error("Valist License SDK: Provider chainId does not match with the chainId passed!");
     });
@@ -46,7 +52,7 @@ class LicenseClient {
     this.signer = provider.getSigner();
     this.licenseClient = new Contract(
       licenseContractAddress,
-      licenseContractAbi,
+      licenseContractABI,
       this.signer
     );
   }
@@ -54,16 +60,14 @@ class LicenseClient {
   /**
  * This function checks if user has purchased the license
  * @param {string} signingMessage - message to be signed by user
- * @param {string} projectId - ID of the project
+ * @param {BigNumberish} projectId - ID of the project
  * @returns {boolean} - true if user has purchased the license
  */
-  async checkLicense(signingMessage: string, projectId: ethers.BigNumberish): Promise<boolean> {
+  async checkLicense(signingMessage: string, projectId: BigNumberish): Promise<boolean> {
     const signerAddress = await this.signer.getAddress();
     const signature = await this.signer.signMessage(signingMessage);
-    const messgeHash = utils.hashMessage(signingMessage);
-    const digest = utils.arrayify(messgeHash);
-    // const recoveredAddress = utils.verifyMessage(signingMessage, signature);
-    const recoveredAddress = utils.recoverAddress(digest, signature);
+    const digest = arrayify(hashMessage(signingMessage));
+    const recoveredAddress = recoverAddress(digest, signature);
     if (signerAddress.toLowerCase() !== recoveredAddress.toLowerCase()) throw new Error("Valist License SDK: Invalid signature");
     const balance = await this.licenseClient.balanceOf(signerAddress, projectId);
     return balance > 0;
@@ -71,11 +75,11 @@ class LicenseClient {
 
   /**
    * Purchase license with native matic token
-   * @param {string} projectId - ID of the project
+   * @param {BigNumberish} projectId - ID of the project
    * @param {string} recipient - address of the recipient
-   * @returns {Promise<ethers.ContractTransaction>} - instance of ethers.ContractTransaction
+   * @returns {Promise<ContractTransaction>} - instance of ContractTransaction
    */
-  async purchaseLicense(projectId: ethers.BigNumberish, recipient: string): Promise<ethers.ContractTransaction> {
+  async purchaseLicense(projectId: BigNumberish, recipient: string): Promise<ContractTransaction> {
     const price = await this.licenseClient["getPrice(uint256)"](projectId);
     const tranaction = await this.licenseClient["purchase(uint256,address)"](projectId, recipient, { value: price });
     return tranaction;
@@ -83,17 +87,17 @@ class LicenseClient {
 
   /**
    * Purchase license with any supported token
-   * @param {string} projectId - ID of the project
+   * @param {BigNumberish} projectId - ID of the project
    * @param {string} recipient - address of the recipient
    * @param {string} tokenAddress - address of the token contract to be used for purchase
-   * @returns {Promise<ethers.ContractTransaction>} - instance of ethers.ContractTransaction
+   * @returns {Promise<ContractTransaction>} - instance of ContractTransaction
    * @throws Error if token is not approved
    * @throws Error if token balance is less than price
    * @throws Error if token transfer fails
    */
-  async purchaseLicenseWithToken(projectId: ethers.BigNumberish, recipient: string, tokenAddress: string): Promise<ethers.ContractTransaction> {
+  async purchaseLicenseWithToken(projectId: BigNumberish, recipient: string, tokenAddress: string): Promise<ContractTransaction> {
     const price = await this.licenseClient["getPrice(address,uint256)"](tokenAddress, projectId);
-    const tokenContract = new Contract(tokenAddress, erc20Abi, this.signer);
+    const tokenContract = new Contract(tokenAddress, erc20ABI, this.signer);
     const tokenBalance = await tokenContract.balanceOf(this.signer.getAddress());
     if (tokenBalance < price) throw new Error("Valist License SDK: Insufficient token balance");
     const approveTx = await tokenContract.approve(this.licenseClient.address, price);
