@@ -23,24 +23,25 @@ const valistLicenseClient = new ValistLicenseClient(provider, chainId);
 
 #### Methods
 
-##### checkLicencse
+##### checkLicense
 
 ```typescript
 const signingMessage = "I am signing this message to prove that I own this wallet address";
 const projectId = 23;
 
-const license = await valistLicenseClient.getLicense(signingMessage, projectId);
+const isExists = await valistLicenseClient.checkLicense(signingMessage, projectId);
+console.log(isExists); // true or false
 
 ```
 
-##### purchaseLicense (Native token)
+##### purchaseLicense (Native matic token)
   
   ```typescript
   const projectId = 21;
   const receipt = "0x...";
 
   const purchaseLicenseTx = await valistLicenseClient.purchaseLicense(projectId, recipient);
-
+  console.log(purchaseLicenseTx); // ethers.js transaction object
   // wait for transaction to be mined
   await purchaseLicenseTx.wait();
   ```
@@ -53,7 +54,7 @@ const license = await valistLicenseClient.getLicense(signingMessage, projectId);
   const recipient = "0x..."; // recipient address to receive the license NFT
 
   const purchaseLicenseTx = await valistLicenseClient.purchaseLicenseWithToken(tokenAddress, projectId, recipient);
-
+  console.log(purchaseLicenseTx); // ethers.js transaction object
   // wait for transaction to be mined
   await purchaseLicenseTx.wait();
   ```

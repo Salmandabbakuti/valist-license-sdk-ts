@@ -1,7 +1,5 @@
 import { Contract, utils, providers, ethers } from 'ethers';
 
-// types
-
 type Provider = providers.Web3Provider | providers.JsonRpcProvider;
 
 const licenseContractAbi: ethers.ContractInterface = [
@@ -28,13 +26,20 @@ class LicenseClient {
   signer: providers.JsonRpcSigner;
   provider: Provider;
   licenseClient: Contract;
-  constructor(
-    provider: Provider,
-    chainId: number
-  ) {
+
+  /**
+ * @constructor
+ * @param {Provider} provider - instance of ethers.providers.Web3Provider or ethers.providers.JsonRpcProvider
+ * @param {number} chainId - chainId of the network to be used
+ */
+  constructor(provider: Provider, chainId: number) {
     // check if entered chainId is supported
-    if (!provider || !chainId) throw new Error("Provider and chainId are required");
-    if (!chainIds.includes(chainId)) throw new Error("ChainId not supported. Supported chainIds are 137, 8001");
+    if (!provider || !chainId) throw new Error("SDK: Provider and chainId are required!");
+    if (!chainIds.includes(chainId)) throw new Error("SDK: ChainId is not supported. Supported chainIds are 137, 8001");
+    provider.getNetwork().then((network) => {
+      if (chainId !== network.chainId) throw new Error("SDK: Provider chainId does not match with the chainId passed!");
+    });
+    console.log("SDK: initialized with chainId", chainId);
     const licenseContractAddress = contractAddresses[chainId];
     console.log(provider);
     this.provider = provider;
@@ -46,9 +51,12 @@ class LicenseClient {
     );
   }
 
-  // purchase license with native matic token
-  // call purchase function of smartcontract with abi signature of purchase(two parameters)
-  // ask for user signature and recover address and use that address to check the license
+  /**
+ * This function checks if user has purchased the license
+ * @param {string} signingMessage - message to be signed by user
+ * @param {string} projectId - ID of the project
+ * @returns {boolean} - true if user has purchased the license
+ */
   async checkLicense(signingMessage: string, projectId: ethers.BigNumberish): Promise<boolean> {
     const signerAddress = await this.signer.getAddress();
     const signature = await this.signer.signMessage(signingMessage);
@@ -61,17 +69,28 @@ class LicenseClient {
     return balance > 0;
   }
 
-  // purchase license with native matic token
-  // call purchase function of smartcontract with abi signature of purchase(two parameters)
+  /**
+   * Purchase license with native matic token
+   * @param {string} projectId - ID of the project
+   * @param {string} recipient - address of the recipient
+   * @returns {Promise<ethers.ContractTransaction>} - instance of ethers.ContractTransaction
+   */
   async purchaseLicense(projectId: ethers.BigNumberish, recipient: string): Promise<ethers.ContractTransaction> {
     const price = await this.licenseClient["getPrice(uint256)"](projectId);
     const tranaction = await this.licenseClient["purchase(uint256,address)"](projectId, recipient, { value: price });
     return tranaction;
   }
 
-  // purchase license with any supported token
-  // use the token contract to transfer the token to the license contract(approve and transferFrom)
-  // call purchase function of smartcontract with abi signature of purchase(three parameters)
+  /**
+   * Purchase license with any supported token
+   * @param {string} projectId - ID of the project
+   * @param {string} recipient - address of the recipient
+   * @param {string} tokenAddress - address of the token contract to be used for purchase
+   * @returns {Promise<ethers.ContractTransaction>} - instance of ethers.ContractTransaction
+   * @throws Error if token is not approved
+   * @throws Error if token balance is less than price
+   * @throws Error if token transfer fails
+   */
   async purchaseLicenseWithToken(projectId: ethers.BigNumberish, recipient: string, tokenAddress: string): Promise<ethers.ContractTransaction> {
     const price = await this.licenseClient["getPrice(address,uint256)"](tokenAddress, projectId);
     const tokenContract = new Contract(tokenAddress, erc20Abi, this.signer);
