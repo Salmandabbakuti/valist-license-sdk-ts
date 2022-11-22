@@ -15,10 +15,10 @@ const erc20ABI: ethers.ContractInterface = [
   "function approve(address spender, uint256 amount) returns (bool)"
 ];
 
-const supportedChainIds: number[] = [8001, 137];
+const supportedChainIds: number[] = [80001, 137];
 
 const contractAddresses: { [key: number]: string; } = {
-  8001: "0x3cE643dc61bb40bB0557316539f4A93016051b81",
+  80001: "0x3cE643dc61bb40bB0557316539f4A93016051b81",
   137: "0x3cE643dc61bb40bB0557316539f4A93016051b81",
 };
 
@@ -36,7 +36,7 @@ class LicenseClient {
   constructor(provider: Provider, chainId: number) {
     // check if entered chainId is supported
     if (!provider || !chainId) throw new Error("Valist License SDK: Provider and chainId are required!");
-    if (!supportedChainIds.includes(chainId)) throw new Error("Valist License SDK: ChainId is not supported. Supported chainIds are 137, 8001");
+    if (!supportedChainIds.includes(chainId)) throw new Error("Valist License SDK: ChainId is not supported. Supported chainIds are 137, 80001");
     const licenseContractAddress = contractAddresses[chainId];
     this.provider = provider;
     this.chainId = chainId;
