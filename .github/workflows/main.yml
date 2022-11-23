@@ -1,8 +1,9 @@
 name: CI
-push:
-  branches: [main, develop, init, "feat/*"]
-pull_request:
-  branches: [main, develop, init, "feat/*"]
+on:
+  push:
+    branches: [main, develop, init, "feat/*"]
+  pull_request:
+    branches: [main, develop, init, "feat/*"]
 jobs:
   build:
     name: Build, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
