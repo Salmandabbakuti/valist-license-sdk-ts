@@ -73,7 +73,7 @@ class LicenseClient {
     const recoveredAddress = utils.recoverAddress(digest, signature);
     if (signerAddress.toLowerCase() !== recoveredAddress.toLowerCase()) throw new Error("Valist License SDK: Invalid signature");
     const balance = await this.licenseClient.balanceOf(signerAddress, projectId);
-    return balance > 0;
+    return balance.gt(0);
   }
 
   /**
@@ -110,7 +110,7 @@ class LicenseClient {
     const price = await this.licenseClient["getPrice(address,uint256)"](tokenAddress, projectId);
     const tokenContract = new Contract(tokenAddress, erc20ABI, this.signer);
     const tokenBalance = await tokenContract.balanceOf(this.signer.getAddress());
-    if (tokenBalance.toNumber() < price) throw new Error("Valist License SDK: Insufficient token balance to purchase license");
+    if (tokenBalance.lt(price)) throw new Error("Valist License SDK: Insufficient token balance to purchase license");
     const approveTx = await tokenContract.approve(this.licenseClient.address, price);
     await approveTx.wait();
     const tranaction = await this.licenseClient["purchase(address,uint256,address)"](tokenAddress, projectId, recipient, { value: price });
