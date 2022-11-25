@@ -3,11 +3,7 @@ import { Contract, utils, providers, ethers } from 'ethers';
 type Provider = providers.Web3Provider | providers.JsonRpcProvider;
 
 const licenseContractABI: ethers.ContractInterface = [
-  "function balanceOf(address account, uint256 id) view returns (uint256)",
-  "function getPrice(address _token, uint256 _projectID) view returns (uint256)",
-  "function getPrice(uint256 _projectID) view returns (uint256)",
-  "function purchase(uint256 _projectID, address _recipient) payable",
-  "function purchase(address _token, uint256 _projectID, address _recipient)"
+  "function balanceOf(address account, uint256 id) view returns (uint256)"
 ];
 
 const erc20ABI: ethers.ContractInterface = [
@@ -114,7 +110,7 @@ class LicenseClient {
     const price = await this.licenseClient["getPrice(address,uint256)"](tokenAddress, projectId);
     const tokenContract = new Contract(tokenAddress, erc20ABI, this.signer);
     const tokenBalance = await tokenContract.balanceOf(this.signer.getAddress());
-    if (tokenBalance < price) throw new Error("Valist License SDK: Insufficient token balance to purchase license");
+    if (tokenBalance.toNumber() < price) throw new Error("Valist License SDK: Insufficient token balance to purchase license");
     const approveTx = await tokenContract.approve(this.licenseClient.address, price);
     await approveTx.wait();
     const tranaction = await this.licenseClient["purchase(address,uint256,address)"](tokenAddress, projectId, recipient, { value: price });
