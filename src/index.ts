@@ -34,14 +34,10 @@ class LicenseClient {
  * const licenseClient = new LicenseClient(provider, 80001);
  * @throws {Error} if provider and/or chainId is not provided
  * @throws {Error} if provided chainId is not supported
- * @throws {Error} if connected provider chainId does not match provided chainId
  */
   constructor(provider: Provider, chainId: number) {
     if (!provider || !chainId) throw new Error("Valist License SDK: Provider and chainId are required!");
     if (!supportedChainIds.includes(chainId)) throw new Error("Valist License SDK: ChainId is not supported. Supported chainIds are 137, 80001");
-    provider.getNetwork().then((network) => {
-      if (network.chainId !== chainId) throw new Error("Valist License SDK: Provider is connected to a different chainId than one specified in the constructor");
-    });
     const licenseContractAddress = contractAddresses[chainId];
     this.provider = provider;
     this.chainId = chainId;

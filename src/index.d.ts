@@ -15,7 +15,6 @@ declare class LicenseClient {
    * const licenseClient = new LicenseClient(provider, 80001);
    * @throws {Error} if provider and/or chainId is not provided
    * @throws {Error} if provided chainId is not supported
-   * @throws {Error} if connected provider chainId does not match provided chainId
    */
     constructor(provider: Provider, chainId: number);
     /**
