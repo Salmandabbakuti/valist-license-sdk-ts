@@ -3,6 +3,7 @@ type Provider = providers.Web3Provider | providers.JsonRpcProvider;
 declare class LicenseClient {
     signer: providers.JsonRpcSigner;
     provider: Provider;
+    chainId: number;
     licenseClient: Contract;
     /**
    * @constructor
@@ -22,6 +23,7 @@ declare class LicenseClient {
    * @param {string} signingMessage - message to be signed by user
    * @param {ethers.BigNumberish} projectId - ID of the project
    * @example const hasPurchased = await licenseClient.checkLicense("I am signing this message", 12);
+   * @throws {Error} if connected provider chainId does not match with provided chainId
    * @returns {boolean} - true if user has purchased the license
    */
     checkLicense(signingMessage: string, projectId: ethers.BigNumberish): Promise<boolean>;
@@ -30,6 +32,7 @@ declare class LicenseClient {
      * @param {ethers.BigNumberish} projectId - ID of the project
      * @param {string} recipient - address of the recipient
      * @example const tx = await licenseClient.purchaseLicense(12, "0xc49a...");
+     * @throws {Error} if connected provider chainId does not match with provided chainId
      * @returns {Promise<ethers.ContractTransaction>} - instance of ethers.ContractTransaction
      */
     purchaseLicense(projectId: ethers.BigNumberish, recipient: string): Promise<ethers.ContractTransaction>;
@@ -39,6 +42,7 @@ declare class LicenseClient {
      * @param {string} recipient - address of the recipient
      * @param {string} tokenAddress - address of the token contract to be used for purchase
      * @example const tx = await licenseClient.purchaseLicense(12, "0xc49a...", "0x7d1a...");
+     * @throws {Error} if connected provider chainId does not match with provided chainId
      * @throws {Error} if token is not approved
      * @throws {Error} if token balance is less than price
      * @throws {Error} if token transfer fails
