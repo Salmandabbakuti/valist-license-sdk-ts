@@ -12,7 +12,8 @@ const licenseContractABI: ethers.ContractInterface = [
 
 const erc20ABI: ethers.ContractInterface = [
   "function balanceOf(address account) view returns (uint256)",
-  "function approve(address spender, uint256 amount) returns (bool)"
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function allowance(address owner, address spender) view returns (uint256)"
 ];
 
 const supportedChainIds: number[] = [80001, 137];
@@ -83,6 +84,7 @@ class LicenseClient {
    * @example const tx = await licenseClient.purchaseLicense(12, "0xc49a...");
    * @throws {Error} if connected provider chainId does not match with provided chainId
    * @throws {Error} if price of the license is 0 which means project license may not exists or sold out
+   * @throws {Error} if user does not have enough balance to purchase the license
    * @returns {Promise<ethers.ContractTransaction>} - instance of ethers.ContractTransaction
    */
   async purchaseLicense(projectId: ethers.BigNumberish, recipient: string): Promise<ethers.ContractTransaction> {
@@ -90,6 +92,8 @@ class LicenseClient {
     if (chainId !== this.chainId) throw new Error("Valist License SDK: Provider is connected to a different chainId than one specified in the constructor");
     const price = await this.licenseClient["getPrice(uint256)"](projectId);
     if (price.eq(0)) throw new Error("Valist License SDK: License may not exists or sold out for this project");
+    const balance = await this.signer.getBalance();
+    if (balance.lt(price)) throw new Error("Valist License SDK: Insufficient balance to purchase license");
     const tranaction = await this.licenseClient["purchase(uint256,address)"](projectId, recipient, { value: price });
     return tranaction;
   }
@@ -113,10 +117,13 @@ class LicenseClient {
     const price = await this.licenseClient["getPrice(address,uint256)"](tokenAddress, projectId);
     if (price.eq(0)) throw new Error("Valist License SDK: License may not exists or sold out for this project");
     const tokenContract = new Contract(tokenAddress, erc20ABI, this.signer);
-    const tokenBalance = await tokenContract.balanceOf(this.signer.getAddress());
+    const tokenBalance = await tokenContract.balanceOf(await this.signer.getAddress());
     if (tokenBalance.lt(price)) throw new Error("Valist License SDK: Insufficient token balance to purchase license");
-    const approveTx = await tokenContract.approve(this.licenseClient.address, price);
-    await approveTx.wait();
+    const tokenAllowance = await tokenContract.allowance(this.signer.getAddress(), this.licenseClient.address);
+    if (tokenAllowance.lt(price)) {
+      const approveTx = await tokenContract.approve(this.licenseClient.address, price.sub(tokenAllowance));
+      await approveTx.wait();
+    }
     const tranaction = await this.licenseClient["purchase(address,uint256,address)"](tokenAddress, projectId, recipient, { value: price });
     return tranaction;
   }

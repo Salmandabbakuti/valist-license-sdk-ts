@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import Image from 'next/image';
 import { Web3Provider } from '@ethersproject/providers';
-import ValistLicenseClient from '../../../dist/index.js';
+import ValistLicenseClient from 'valist-license-sdk-ts';
 import styles from '../styles/Home.module.css';
 
 export default function Home() {
@@ -87,6 +86,22 @@ export default function Home() {
       setLogMessage(`Error checking license: ${err.message}`);
     }
   };
+
+  useEffect(() => {
+    if (provider) {
+      console.log("window.ethereum", (window as any).ethereum);
+      (window as any).ethereum.on("accountsChanged", () => window.location.reload());
+      (window as any).ethereum.on("chainChanged", () => window.location.reload());
+      (window as any).ethereum.on("connect", (info: any) =>
+        console.log("connected to network", info)
+      );
+    }
+    return () => {
+      if (provider) {
+        (window as any).ethereum.removeAllListeners();
+      }
+    };
+  }, [provider]);
 
   return (
     <div className={styles.container}>

@@ -6,6 +6,8 @@ This is an un-official Valist Software License Client SDK. It allows you to inte
 
 ```bash
 npm install valist-license-sdk-ts
+# or with yarn
+yarn add valist-license-sdk-ts
 ```
 
 #### Usage
@@ -68,3 +70,10 @@ console.log(purchaseLicenseTx); // ethers.js transaction object
 // wait for transaction to be mined
 await purchaseLicenseTx.wait();
 ```
+
+### Safety
+
+This is experimental software and is provided on an "as is" and "as available" basis.
+
+This SDK is not audited and has not been tested for security. Use at your own risk.
+I do not give any warranties and will not be liable for any loss incurred through any use of this codebase.

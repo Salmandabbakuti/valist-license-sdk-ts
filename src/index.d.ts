@@ -33,6 +33,7 @@ declare class LicenseClient {
      * @example const tx = await licenseClient.purchaseLicense(12, "0xc49a...");
      * @throws {Error} if connected provider chainId does not match with provided chainId
      * @throws {Error} if price of the license is 0 which means project license may not exists or sold out
+     * @throws {Error} if user does not have enough balance to purchase the license
      * @returns {Promise<ethers.ContractTransaction>} - instance of ethers.ContractTransaction
      */
     purchaseLicense(projectId: ethers.BigNumberish, recipient: string): Promise<ethers.ContractTransaction>;
