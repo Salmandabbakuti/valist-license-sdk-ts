@@ -19,19 +19,21 @@ declare class LicenseClient {
     constructor(provider: Provider, chainId: number);
     /**
    * This function checks if user has purchased the license
-   * @param {string} signingMessage - message to be signed by user
    * @param {ethers.BigNumberish} projectId - ID of the project
-   * @example const hasPurchased = await licenseClient.checkLicense("I am signing this message", 12);
+   * @param {string} signingMessage - message to be signed by user
+   * @example const hasPurchased = await licenseClient.checkLicense(12, "I am signing this message");
    * @throws {Error} if connected provider chainId does not match with provided chainId
    * @returns {boolean} - true if user has purchased the license
    */
-    checkLicense(signingMessage: string, projectId: ethers.BigNumberish): Promise<boolean>;
+    checkLicense(projectId: ethers.BigNumberish, signingMessage?: string): Promise<boolean>;
     /**
      * Purchase license with native matic token
      * @param {ethers.BigNumberish} projectId - ID of the project
      * @param {string} recipient - address of the recipient
      * @example const tx = await licenseClient.purchaseLicense(12, "0xc49a...");
      * @throws {Error} if connected provider chainId does not match with provided chainId
+     * @throws {Error} if price of the license is 0 which means project license may not exists or sold out
+     * @throws {Error} if user does not have enough balance to purchase the license
      * @returns {Promise<ethers.ContractTransaction>} - instance of ethers.ContractTransaction
      */
     purchaseLicense(projectId: ethers.BigNumberish, recipient: string): Promise<ethers.ContractTransaction>;
@@ -42,6 +44,7 @@ declare class LicenseClient {
      * @param {string} tokenAddress - address of the token contract to be used for purchase
      * @example const tx = await licenseClient.purchaseLicense(12, "0xc49a...", "0x7d1a...");
      * @throws {Error} if connected provider chainId does not match with provided chainId
+     * @throws {Error} if price of the license is 0 which means project license may not exists or sold out
      * @throws {Error} if token is not approved
      * @throws {Error} if token balance is less than price
      * @throws {Error} if token transfer fails
