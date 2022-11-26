@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
-import { ethers, providers } from 'ethers';
+import { Web3Provider } from '@ethersproject/providers';
 import ValistLicenseClient from '../../../dist/index.js';
 import styles from '../styles/Home.module.css';
 
 export default function Home() {
-  const [provider, setProvider] = useState<providers.Web3Provider | null>(null);
+  const [provider, setProvider] = useState<Web3Provider | null>(null);
   const [chainId, setChainId] = useState<number | null>(null);
   const [account, setAccount] = useState('');
   const [projectIdInput, setProjectIdInput] = useState('');
@@ -20,7 +20,7 @@ export default function Home() {
           method: "eth_requestAccounts"
         });
         console.log("Using account: ", accounts[0]);
-        const provider = new providers.Web3Provider((window as any)?.ethereum);
+        const provider = new Web3Provider((window as any)?.ethereum);
         const { chainId } = await provider.getNetwork();
         if (chainId !== 80001) {
           console.log("Please connect to Polygon Mumbai Testnet");
@@ -39,9 +39,9 @@ export default function Home() {
         console.log("Please use Web3 enabled browser");
         setLogMessage("Please use Web3 enabled browser");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.log("Error connecting wallet", err);
-      setLogMessage("Error connecting wallet");
+      setLogMessage(`Error connecting wallet: ${err.message}`);
     }
   };
   const purchaseLicense = async () => {
@@ -53,9 +53,9 @@ export default function Home() {
       await tx.wait();
       console.log('License purchased');
       setLogMessage('License purchased');
-    } catch (err) {
+    } catch (err: any) {
       console.log("Error purchasing license", err);
-      setLogMessage("Error purchasing license");
+      setLogMessage(`Error purchasing license: ${err.message}`);
     }
   };
 
@@ -67,10 +67,10 @@ export default function Home() {
       console.log('tx', tx);
       await tx.wait();
       console.log('License purchased with USDC');
-      setLogMessage('License purchased');
-    } catch (err) {
+      setLogMessage('License purchased with USDC');
+    } catch (err: any) {
       console.log("Error purchasing license with USDC", err);
-      setLogMessage("Error purchasing license with USDC");
+      setLogMessage(`Error purchasing license with USDC: ${err.message}`);
     }
   };
   const checkLicense = async () => {
@@ -82,9 +82,9 @@ export default function Home() {
       console.log('hasLicense', hasLicense);
       setHasLicense(hasLicense);
       setLogMessage(hasLicense ? 'You have a license for this project' : 'You do not have a license for this project');
-    } catch (err) {
+    } catch (err: any) {
       console.log("Error checking license", err);
-      setLogMessage("Error checking license");
+      setLogMessage(`Error checking license: ${err.message}`);
     }
   };
 
@@ -110,7 +110,7 @@ export default function Home() {
             <input
               className={styles.input}
               type="text"
-              placeholder="Project ID"
+              placeholder="Enter Project ID"
               value={projectIdInput}
               onChange={(e) => setProjectIdInput(e.target.value)}
             />
@@ -131,14 +131,11 @@ export default function Home() {
 
       <footer className={styles.footer}>
         <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+          href="https://github.com/Salmandabbakuti"
           target="_blank"
           rel="noopener noreferrer"
         >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
+          © 2022 Salman Dabbakuti. Built with Lit Protocol
         </a>
       </footer>
     </div>

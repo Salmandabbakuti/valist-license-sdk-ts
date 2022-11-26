@@ -3,6 +3,7 @@ import styles from "../styles/Home.module.css";
 
 export default function Protected(props: any) {
   const router = useRouter();
+
   return (
     <div>
       <main className={styles.main}>
