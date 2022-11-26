@@ -5,9 +5,9 @@ on:
     branches: [main, develop, "feat/*"]
   pull_request:
     branches: [main, develop, "feat/*"]
-  schedule:
-    # runs on schedule basis to find latest vulnerabilities even if code is not pushed
-    #- cron: "0 10 * * *"
+#   schedule:
+#     # runs on schedule basis to find latest vulnerabilities even if code is not pushed
+#     - cron: "0 10 * * *"
 
 jobs:
   codeql-analyze:
