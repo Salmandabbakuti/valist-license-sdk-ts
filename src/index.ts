@@ -3,7 +3,11 @@ import { Contract, utils, providers, ethers } from 'ethers';
 type Provider = providers.Web3Provider | providers.JsonRpcProvider;
 
 const licenseContractABI: ethers.ContractInterface = [
-  "function balanceOf(address account, uint256 id) view returns (uint256)"
+  "function balanceOf(address account, uint256 id) view returns (uint256)",
+  "function getPrice(address _token, uint256 _projectID) view returns (uint256)",
+  "function getPrice(uint256 _projectID) view returns (uint256)",
+  "function purchase(uint256 _projectID, address _recipient) payable",
+  "function purchase(address _token, uint256 _projectID, address _recipient)"
 ];
 
 const erc20ABI: ethers.ContractInterface = [
@@ -52,13 +56,13 @@ class LicenseClient {
 
   /**
  * This function checks if user has purchased the license
- * @param {string} signingMessage - message to be signed by user
  * @param {ethers.BigNumberish} projectId - ID of the project
- * @example const hasPurchased = await licenseClient.checkLicense("I am signing this message", 12);
+ * @param {string} signingMessage - message to be signed by user
+ * @example const hasPurchased = await licenseClient.checkLicense(12, "I am signing this message");
  * @throws {Error} if connected provider chainId does not match with provided chainId
  * @returns {boolean} - true if user has purchased the license
  */
-  async checkLicense(signingMessage: string, projectId: ethers.BigNumberish): Promise<boolean> {
+  async checkLicense(projectId: ethers.BigNumberish, signingMessage: string = "I am signing this messag to authenticate"): Promise<boolean> {
     const { chainId } = await this.provider.getNetwork();
     if (chainId !== this.chainId) throw new Error("Valist License SDK: Provider is connected to a different chainId than one specified in the constructor");
     const signerAddress = await this.signer.getAddress();
@@ -78,12 +82,14 @@ class LicenseClient {
    * @param {string} recipient - address of the recipient
    * @example const tx = await licenseClient.purchaseLicense(12, "0xc49a...");
    * @throws {Error} if connected provider chainId does not match with provided chainId
+   * @throws {Error} if price of the license is 0 which means project license may not exists or sold out
    * @returns {Promise<ethers.ContractTransaction>} - instance of ethers.ContractTransaction
    */
   async purchaseLicense(projectId: ethers.BigNumberish, recipient: string): Promise<ethers.ContractTransaction> {
     const { chainId } = await this.provider.getNetwork();
     if (chainId !== this.chainId) throw new Error("Valist License SDK: Provider is connected to a different chainId than one specified in the constructor");
     const price = await this.licenseClient["getPrice(uint256)"](projectId);
+    if (price.eq(0)) throw new Error("Valist License SDK: License may not exists or sold out for this project");
     const tranaction = await this.licenseClient["purchase(uint256,address)"](projectId, recipient, { value: price });
     return tranaction;
   }
@@ -95,6 +101,7 @@ class LicenseClient {
    * @param {string} tokenAddress - address of the token contract to be used for purchase
    * @example const tx = await licenseClient.purchaseLicense(12, "0xc49a...", "0x7d1a...");
    * @throws {Error} if connected provider chainId does not match with provided chainId
+   * @throws {Error} if price of the license is 0 which means project license may not exists or sold out
    * @throws {Error} if token is not approved
    * @throws {Error} if token balance is less than price
    * @throws {Error} if token transfer fails
@@ -104,6 +111,7 @@ class LicenseClient {
     const { chainId } = await this.provider.getNetwork();
     if (chainId !== this.chainId) throw new Error("Valist License SDK: Provider is connected to a different chainId than one specified in the constructor");
     const price = await this.licenseClient["getPrice(address,uint256)"](tokenAddress, projectId);
+    if (price.eq(0)) throw new Error("Valist License SDK: License may not exists or sold out for this project");
     const tokenContract = new Contract(tokenAddress, erc20ABI, this.signer);
     const tokenBalance = await tokenContract.balanceOf(this.signer.getAddress());
     if (tokenBalance.lt(price)) throw new Error("Valist License SDK: Insufficient token balance to purchase license");
